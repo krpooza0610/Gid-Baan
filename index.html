@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MANBODTIP - Minimal</title>
+    <title>Gid-Baan</title>
     <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         /* --- 1. การตั้งค่าธีมมินิมอล (White & Pastel Theme) --- */
@@ -37,7 +37,7 @@
             width: 100%;
             max-width: 480px;
             background: var(--bg-main);
-            min-height: 100vh;
+            min-height: calc(100vh + 60px);
             position: relative;
             padding-bottom: 90px;
         }
@@ -401,6 +401,14 @@
         document.getElementById('postInput').value = "";
         window.showPage('home-page'); // โพสต์เสร็จกลับหน้าแรก
     };
+    
+    // สั่งให้ซ่อนแถบ URL ทันทีที่โหลดหน้าเว็บเสร็จ
+window.addEventListener("load", function() {
+    setTimeout(function() {
+        // เลื่อนหน้าจอลงไป 1 พิกเซลเพื่อหลอกเบราว์เซอร์ให้ซ่อนแถบ URL
+        window.scrollTo(0, 1);
+    }, 100);
+});
 </script>
 </body>
 </html>
