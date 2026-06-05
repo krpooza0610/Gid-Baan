@@ -3,28 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gid-Baan</title>
-    
-    <!-- บังคับให้แสดงผลแบบ Fullscreen สำหรับ Android/iOS -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-    <!-- ลิงก์ไปยังไฟล์ Manifest -->
-    <link rel="manifest" href="manifest.json">
-    
+    <title>MANBODTIP - Minimal</title>
     <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;700&display=swap" rel="stylesheet">
-    
     <style>
-        /* --- ปรับแต่งสีและมิติสไตล์มินิมอล (Minimal Soft Light) --- */
+        /* --- 1. การตั้งค่าธีมมินิมอล (White & Pastel Theme) --- */
         :root {
-            --bg-main: #f2f4f7;       /* ปรับพื้นหลังรอบนอกให้เทาอมฟ้าอ่อน ๆ เพื่อขับให้กล่องโพสต์เด่นขึ้น */
-            --card-bg: #ffffff;       /* กล่องโพสต์ขาวบริสุทธิ์ */
-            --text-main: #111111;     /* ตัวหนังสือเข้มเด่นชัด */
-            --text-dim: #7f8c8d;      /* ตัวหนังสือสีจางสำหรับ @username และสถิติ */
-            --primary: #2c3e50;       /* สีน้ำเงินเข้มหรู ๆ สำหรับปุ่มหลัก */
-            --accent: #5ccbb0;        /* สีเขียวพาสเทลยอดฮิตแบบปุ่มบวกในรูป */
-            --border-color: #e9ecef;  /* เส้นขอบจาง ๆ ดูสะอาดตา */
+            --bg-main: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-main: #1a1a1a;
+            --text-dim: #757575;
+            --primary: #1a1a1a;
+            --accent: #6cd1b4; /* สีเขียวพาสเทลแบบปุ่มบวกในรูป */
+            --border-color: #eaeaea;
         }
 
         * { 
@@ -40,8 +30,6 @@
             min-height: 100vh; 
             display: flex;
             justify-content: center;
-            background-image: radial-gradient(#e3e7ed 1px, transparent 1px);
-            background-size: 20px 20px;
         }
 
         /* จำลองหน้าจอมือถือตรงกลาง */
@@ -103,12 +91,11 @@
         /* --- 4. ดีไซน์ฟีดโพสต์ (Post Cards) --- */
         .post-card {
             background: var(--card-bg);
-            border-radius: 20px;       
-            padding: 18px;
-            margin-bottom: 18px;
-            box-shadow: 0 8px 24px rgba(149, 157, 165, 0.15); 
-            border: 1px solid rgba(0, 0, 0, 0.02);
-            transition: transform 0.2s ease;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border: 1px solid var(--border-color);
         }
 
         .post-header {
@@ -221,7 +208,7 @@
             width: 100%;
         }
 
-        /* --- 7. เมนูบาร์ด้านล่าง (Floating Bottom Nav) --- */
+        /* --- 7. เมนูบาร์ด้านล่าง (Floating Bottom Nav แบบในรูป) --- */
         .nav-bar {
             position: fixed;
             bottom: 20px;
@@ -258,6 +245,7 @@
             margin-bottom: 2px;
         }
 
+        /* ปุ่มโพสต์ตรงกลางทรงกลมพาสเทล */
         .nav-center-btn {
             width: 52px;
             height: 52px;
@@ -280,3 +268,139 @@
         }
     </style>
 </head>
+<body>
+
+<div class="app-container">
+
+    <!-- Header ส่วนบน -->
+    <header class="main-header">
+        <div class="logo">CHIRP</div>
+        <div class="header-icons">🔍 👤</div>
+    </header>
+
+    <!-- หน้าที่ 1: ฟีดข่าว (Home) -->
+    <main id="home-page" class="page active">
+        <div class="page-title">Feed</div>
+        <div id="feed-container">
+            <!-- ตัวอย่างโพสต์แบบ Static ให้เห็นดีไซน์ก่อนเชื่อมต่อข้อมูล -->
+            <div class="post-card">
+                <div class="post-header">
+                    <div class="avatar-placeholder"></div>
+                    <div>
+                        <div class="author-name">Elena Gomez</div>
+                        <div style="font-size: 11px; color: var(--text-dim);">@elenaG</div>
+                    </div>
+                </div>
+                <div class="post-content">Exploring Seoul this morning! ✨ #travel #seoul</div>
+                <img src="https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=500" class="post-img">
+                <div class="post-actions">
+                    <div class="action-item">❤️ 124</div>
+                    <div class="action-item">💬 32</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- หน้าที่ 2: สร้างโพสต์ใหม่ -->
+    <main id="post-page" class="page">
+        <div class="page-title">Create Post</div>
+        <textarea id="postInput" class="post-textarea" placeholder="ภูมีอะไรอยากแชร์วันนี้ไหมครับ..."></textarea>
+        <button onclick="uploadAndPost()" class="submit-btn">โพสต์เลย</button>
+    </main>
+
+    <!-- หน้าที่ 3: แชทสด -->
+    <main id="chat-page" class="page">
+        <div class="page-title">Live Chat</div>
+        <div id="chat-display" class="chat-container">
+            <div class="chat-bubble">สวัสดีครับภู ยินดีต้อนรับสู่ห้องแชทเวอร์ชันมินิมอลครับ!</div>
+        </div>
+        <div class="chat-input-zone">
+            <input type="text" id="chatInput" class="chat-input" placeholder="พิมพ์ข้อความ...">
+            <button onclick="sendMessage()" class="submit-btn" style="width: auto; padding: 0 20px;">🚀</button>
+        </div>
+    </main>
+
+    <!-- เมนูด้านล่าง (Floating Nav) -->
+    <nav class="nav-bar">
+        <div class="nav-item active" onclick="showPage('home-page', this)">
+            <div class="nav-icon">🏠</div>
+            <div>Feed</div>
+        </div>
+        <div class="nav-center-btn" onclick="showPage('post-page', this)">+</div>
+        <div class="nav-item" onclick="showPage('chat-page', this)">
+            <div class="nav-icon">💬</div>
+            <div>Live Chat</div>
+        </div>
+    </nav>
+
+</div>
+
+<!-- ส่วนของ Firebase และ Logic ควบคุมหน้าจอ -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    // ใช้ Firebase คอนฟิกชุดเดิมของแอป MANBODTIP ได้เลยครับภู[span_1](start_span)[span_1](end_span)
+    const firebaseConfig = {
+        apiKey: "AIzaSyB6WVXMJFGYSChj4nkULqZa-8x-odUwEzE",
+        authDomain: "manbodtip.firebaseapp.com",
+        databaseURL: "https://manbodtip-default-rtdb.firebaseio.com",
+        projectId: "manbodtip",
+        storageBucket: "manbodtip.firebasestorage.app",
+        messagingSenderId: "654202068900",
+        appId: "1:654202068900:web:595437786bc69233fa6b31"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const chatRef = ref(db, "chats");
+    const postsRef = ref(db, "posts");
+
+    // --- ฟังก์ชันสลับหน้าแอป ---
+    window.showPage = (pageId, element) => {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        
+        document.getElementById(pageId).classList.add('active');
+        if(element && element.classList.contains('nav-item')) {
+            element.classList.add('active');
+        }
+    };
+
+    // --- ระบบแชทสดพื้นฐาน ---
+    window.sendMessage = () => {
+        const input = document.getElementById('chatInput');
+        if(input.value.trim() !== "") {
+            push(chatRef, { text: input.value, timestamp: Date.now() });
+            input.value = "";
+        }
+    };
+
+    onChildAdded(chatRef, (snapshot) => {
+        const data = snapshot.val();
+        const display = document.getElementById('chat-display');
+        if (!display) return;
+        const newMsg = `<div class="chat-bubble">${data.text}</div>`;
+        display.insertAdjacentHTML('beforeend', newMsg);
+        display.scrollTop = display.scrollHeight;
+    });
+
+    // --- ระบบโพสต์ข้อความพื้นฐาน ---
+    window.uploadAndPost = () => {
+        const content = document.getElementById('postInput').value;
+        if (!content.trim()) return;
+
+        push(postsRef, {
+            author: "ภู",
+            content: content,
+            likes: 0,
+            timestamp: Date.now()
+        });
+
+        document.getElementById('postInput').value = "";
+        window.showPage('home-page'); // โพสต์เสร็จกลับหน้าแรก
+    };
+</script>
+</body>
+</html>
