@@ -78,10 +78,10 @@
 
 /* เมื่อติดสถานะขยายออก (Active) */
 .status-capsule.active {
-    width: 260px; /* ขยายความกว้างออกไปทางซ้าย */
+    width: 280px; /* ขยายความกว้างออกไปทางซ้าย */
     background: rgba(44, 62, 80, 0.08); /* ใส่พื้นหลังจางๆ ให้เห็นทรงวงรีชัดขึ้น */
     border: 1px solid rgba(44, 62, 80, 0.1);
-    padding-left: 12px;
+    padding-left: 8px;
 }
 
 /* โซนรูปโปรไฟล์ (ล็อกตำแหน่งอยู่ขวาสุด) */
@@ -119,6 +119,8 @@
     transition: all 0.3s ease;
     pointer-events: none;
     white-space: nowrap;
+
+    flex-shrink: 0; /* 🌟 เติมบรรทัดนี้ด้วย: สั่งห้ามบีบหลอด EXP และตัวหนังสือเด็ดขาด */
 }
 .status-capsule.active .stat-info-zone {
     opacity: 1;
@@ -145,7 +147,7 @@
 
 /* ดีไซน์หลอด EXP */
 .exp-bar-bg {
-    width: 80px;
+    width: 65px;
     height: 6px;
     background: #e0e0e0;
     border-radius: 3px;
@@ -166,6 +168,8 @@
     cursor: pointer;
     padding: 4px 8px;
     border-radius: 8px;
+
+    flex-shrink: 0; /* 🌟 เติมบรรทัดนี้: สั่งห้ามบีบแว่นขยายเด็ดขาด มันจะได้ไม่แอบ */
 }
 .search-box-zone:active {
     background: rgba(0,0,0,0.1);
