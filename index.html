@@ -43,21 +43,137 @@
         }
 
         /* --- 2. Header ส่วนบน --- */
-        .main-header {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            max-width: 480px;
-            height: 70px;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(10px);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 8px;
-            border-bottom: 1px solid var(--border-color);
-            z-index: 1000;
-        }
+        /* --- ปรับแต่ง แถบหัวบน และ แถบสถานะเกมเมอร์มินิมอล --- */
+.main-header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    max-width: 480px;
+    height: 70px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 8px; 
+    border-bottom: 1px solid var(--border-color);
+    z-index: 1000;
+}
+
+/* ตัวกล่องวงรีหลัก (ตอนเริ่มต้นจะหดเหลือแค่วงกลมพอดีรูปโปร) */
+.status-capsule {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    background: transparent;
+    height: 46px;
+    width: 46px;
+    border-radius: 23px;
+    padding: 3px;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* อนิเมชั่นยืดเด้งสไตล์เกม */
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+}
+
+/* เมื่อติดสถานะขยายออก (Active) */
+.status-capsule.active {
+    width: 260px; /* ขยายความกว้างออกไปทางซ้าย */
+    background: rgba(44, 62, 80, 0.08); /* ใส่พื้นหลังจางๆ ให้เห็นทรงวงรีชัดขึ้น */
+    border: 1px solid rgba(44, 62, 80, 0.1);
+    padding-left: 12px;
+}
+
+/* โซนรูปโปรไฟล์ (ล็อกตำแหน่งอยู่ขวาสุด) */
+.avatar-zone {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.avatar-circle {
+    width: 100%;
+    height: 100%;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* โซนข้อมูลสถิติ ฉายา เลเวล EXP (ซ่อนไว้ก่อนขยาย) */
+.stat-info-zone {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-grow: 1;
+    margin-right: 12px;
+    margin-left: 10px;
+    opacity: 0;
+    transform: translateX(10px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+    white-space: nowrap;
+}
+.status-capsule.active .stat-info-zone {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
+.nickname {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 2px;
+}
+.sub-row-bottom {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.lv-text {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+/* ดีไซน์หลอด EXP */
+.exp-bar-bg {
+    width: 80px;
+    height: 6px;
+    background: #e0e0e0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+.exp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #3498db);
+    border-radius: 3px;
+}
+
+/* โซนปุ่มแว่นขยายค้นหามินิมอล (ซ่อนไว้ก่อนขยาย) */
+.search-box-zone {
+    font-size: 16px;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+}
+.search-box-zone:active {
+    background: rgba(0,0,0,0.1);
+}
+.status-capsule.active .search-box-zone {
+    opacity: 1;
+    transform: scale(1);
+}
 
         .logo {
             font-size: 22px;
@@ -275,11 +391,34 @@
     <!-- Header ส่วนบน -->
 <header class="main-header">
     <div class="logo">
-        <img src="logo.png" alt="Gid-Baan Logo" style="height: 110px; width: auto; display: block;">
+        <img src="logo.png" alt="Gid-Baan Logo" style="height: 40px; width: auto; display: block; margin-left: -5px;">
     </div>
-    <div class="header-icons">🔍 👤</div>
+    
+    <!-- แถบสถานะวงรีแปลงร่าง (Status Capsule) -->
+    <div id="status-capsule" class="status-capsule" onclick="expandCapsule(event)">
+        <!-- ฝั่งซ้ายสุด: ปุ่มค้นหามินิมอล (จะโชว์ตอนขยาย) -->
+        <div class="search-box-zone" onclick="triggerSearch(event)">
+            🔍
+        </div>
+        
+        <!-- ตรงกลาง: ฉายา, เลเวล, และหลอด EXP (จะโชว์ตอนขยาย) -->
+        <div class="stat-info-zone">
+            <div class="sub-row nickname">จอมยุทธภู</div>
+            <div class="sub-row-bottom">
+                <span class="lv-text">Lv.1</span>
+                <div class="exp-bar-bg">
+                    <div class="exp-bar-fill" style="width: 45%;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ฝั่งขวาสุด: รูปโปรไฟล์วงกลม (อยู่ที่เดิมตลอดเวลา) -->
+        <div class="avatar-zone">
+            <div class="avatar-circle">👤</div>
+        </div>
+    </div>
 </header>
-
+    
     <!-- หน้าที่ 1: ฟีดข่าว (Home) -->
     <main id="home-page" class="page active">
         <div id="feed-container">
@@ -410,6 +549,38 @@ window.addEventListener("load", function() {
         window.scrollTo(0, 1);
     }, 100);
 });
+
+    let capsuleTimer = null;
+
+window.expandCapsule = (event) => {
+    const capsule = document.getElementById('status-capsule');
+    
+    // ถ้ามันยังไม่ได้ขยาย ให้ขยายออกซะ
+    if (!capsule.classList.contains('active')) {
+        capsule.classList.add('active');
+        startCapsuleTimer();
+    }
+};
+
+// ฟังก์ชันเริ่มนับถอยหลัง 5 วินาทีแล้วหดกลับ
+function startCapsuleTimer() {
+    // รีเซ็ตไทเมอร์เก่าทิ้งก่อนเพื่อป้องกันเวลาซ้อนกัน
+    if (capsuleTimer) clearTimeout(capsuleTimer);
+    
+    capsuleTimer = setTimeout(() => {
+        const capsule = document.getElementById('status-capsule');
+        capsule.classList.remove('active');
+    }, 5000); // 5000 มิลลิวินาที = 5 วินาทีเป๊ะ ๆ ตามที่ภูขอเลยครับ
+}
+
+// ฟังก์ชันเมื่อจิ้มที่แว่นขยาย (ป้องกันไม่ให้มันหดตัวตอนกำลังกดค้นหา)
+window.triggerSearch = (event) => {
+    event.stopPropagation(); // หยุดไม่ให้คำสั่งคลิกวิ่งไปกวนกล่องหลัก
+    alert("เปิดหน้าต่างค้นหาจอมยุทธแอป Gid-Baan! 🔍");
+    
+    // รีเซ็ตเวลานับถอยหลังใหม่ให้ทันทีหลังจากกด เพื่อไม่ให้มันหดวาร์ปหลุดมือตอนกำลังเล่น
+    startCapsuleTimer(); 
+};
 </script>
 </body>
 </html>
