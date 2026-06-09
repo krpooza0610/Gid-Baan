@@ -161,15 +161,19 @@
 
 /* โซนปุ่มแว่นขยายค้นหามินิมอล (ซ่อนไว้ก่อนขยาย) */
 .search-box-zone {
-    font-size: 16px;
     opacity: 0;
     transform: scale(0.5);
     transition: all 0.3s ease;
     cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 8px;
-
-    flex-shrink: 0; /* 🌟 เติมบรรทัดนี้: สั่งห้ามบีบแว่นขยายเด็ดขาด มันจะได้ไม่แอบ */
+    
+    /* 🌟 เพิ่มโค้ด 3 บรรทัดนี้เพื่อให้รูปภาพแว่นขยายจัดอยู่ตรงกลางกล่องพอดีเป๊ะ */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    padding: 6px; /* ระยะห่างรอบๆ รูปแว่นขยาย */
+    border-radius: 50%;
+    flex-shrink: 0;
 }
 .search-box-zone:active {
     background: rgba(0,0,0,0.1);
@@ -399,28 +403,30 @@
     </div>
     
     <!-- แถบสถานะวงรีแปลงร่าง (Status Capsule) -->
-    <div id="status-capsule" class="status-capsule" onclick="expandCapsule(event)">
-        <!-- ฝั่งซ้ายสุด: ปุ่มค้นหามินิมอล (จะโชว์ตอนขยาย) -->
-        <div class="search-box-zone" onclick="triggerSearch(event)">
-            🔍
-        </div>
-        
-        <!-- ตรงกลาง: ฉายา, เลเวล, และหลอด EXP (จะโชว์ตอนขยาย) -->
-        <div class="stat-info-zone">
-            <div class="sub-row nickname">จอมยุทธภู</div>
-            <div class="sub-row-bottom">
-                <span class="lv-text">Lv.1</span>
-                <div class="exp-bar-bg">
-                    <div class="exp-bar-fill" style="width: 45%;"></div>
-                </div>
+<div id="status-capsule" class="status-capsule" onclick="expandCapsule(event)">
+    
+    <!-- ฝั่งซ้ายสุด: เปลี่ยนจากอีโมจิ 🔍 มาเป็นรูปแว่นขยายมินิมอลตัวใหม่ -->
+    <div class="search-box-zone" onclick="triggerSearch(event)">
+        <img src="search-icon.png" alt="Search" style="width: 20px; height: 20px; display: block; object-fit: contain;">
+    </div>
+    
+    <!-- ตรงกลาง: ฉายา, เลเวล, และหลอด EXP -->
+    <div class="stat-info-zone">
+        <div class="sub-row nickname">จอมยุทธภู</div>
+        <div class="sub-row-bottom">
+            <span class="lv-text">Lv.1</span>
+            <div class="exp-bar-bg">
+                <div class="exp-bar-fill" style="width: 45%;"></div>
             </div>
         </div>
-        
-        <!-- ฝั่งขวาสุด: รูปโปรไฟล์วงกลม (อยู่ที่เดิมตลอดเวลา) -->
-        <div class="avatar-zone">
-            <div class="avatar-circle">👤</div>
-        </div>
     </div>
+    
+    <!-- ฝั่งขวาสุด: รูปโปรไฟล์วงกลม -->
+    <div class="avatar-zone">
+        <div class="avatar-circle">👤</div>
+    </div>
+</div>
+    
 </header>
     
     <!-- หน้าที่ 1: ฟีดข่าว (Home) -->
