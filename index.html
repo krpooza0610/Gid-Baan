@@ -476,7 +476,7 @@
 <header class="main-header">
     <div class="logo">
         <!-- จิ้มที่รูปภาพโลโก้แล้วสั่งให้วิ่งไปทำงานที่ฟังก์ชัน scrollToTop -->
-<img src="logo.png" alt="Gid-Baan Logo" onclick="scrollToTop()" class="logo-img">
+<img src="logo.png" alt="Gid-Baan" onclick="showPage('home-page', this); scrollToTop();" class="logo-img">
     </div>
     
     <!-- แถบสถานะวงรีแปลงร่าง (Status Capsule) -->
@@ -682,17 +682,11 @@ window.triggerSearch = (event) => {
 };
 
 function scrollToTop() {
-    const feed = document.querySelector('.feed-container');
-    if (feed) {
-        feed.scrollTo({
-            top: 0,
-            behavior: 'smooth' // เลื่อนกลับขึ้นบนสุดแบบสมูท ๆ
-        });
+    const feedContainer = document.querySelector('.feed-container');
+    if (feedContainer) {
+        feedContainer.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 </script>
