@@ -255,15 +255,52 @@
             margin-bottom: 12px;
         }
 
-        .post-actions {
-            display: flex;
-            gap: 20px;
-            font-size: 14px;
-            color: var(--text-dim);
-            border-top: 1px solid #f5f5f5;
-            padding-top: 10px;
-        }
+        /* กล่องรวมปุ่มใต้โพสต์ */
+.post-actions {
+    display: flex;
+    gap: 20px; /* ระยะห่างระหว่างกลุ่มปุ่มไลก์ กับ กลุ่มปุ่มคอมเมนต์ */
+    padding: 10px 15px;
+    border-top: 1px solid rgba(44, 62, 80, 0.05);
+}
 
+/* สไตล์ของตัวปุ่มเคลียร์พื้นหลังเดิมออก */
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px; /* ระยะห่างระหว่าง "ตัวไอคอนรูป" กับ "ตัวเลข" */
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 20px;
+    transition: background 0.2s ease;
+}
+
+/* เอฟเฟกต์ตอนเอาเมาส์ไปชี้หรือเอานิ้วไปจิ้ม */
+.action-btn:hover {
+    background: rgba(44, 62, 80, 0.05);
+}
+
+/* 🌟 ควบคุมขนาดไอคอนใหม่ของภูให้คมชัดกำลังดี */
+.action-icon {
+    width: 24px;       /* ปรับเพิ่ม/ลดขนาดความกว้างตรงนี้ได้ตามชอบเลยนะเพื่อน */
+    height: 24px;      /* ปรับให้เท่ากับความกว้างเพื่อให้รูปไม่เบี้ยว */
+    object-fit: contain;
+    display: block;
+}
+
+/* สไตล์ตัวเลขยอดไลก์/คอมเมนต์ */
+.action-count {
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+}
+
+/* เมื่อปุ่มกดไลก์โดนคลิก (Active) ให้เส้นดูเข้มและสว่างชัดขึ้น */
+.action-btn.liked .action-icon {
+    filter: drop-shadow(0px 0px 4px rgba(168, 230, 207, 0.6)) brightness(1.1);
+}
+        
         .action-item {
             cursor: pointer;
             display: flex;
@@ -443,10 +480,22 @@
                 </div>
                 <div class="post-content">Exploring Seoul this morning! ✨ #travel #seoul</div>
                 <img src="https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=500" class="post-img">
-                <div class="post-actions">
-                    <div class="action-item">❤️ 124</div>
-                    <div class="action-item">💬 32</div>
-                </div>
+                <!-- โซนปุ่มปฏิสัมพันธ์ใต้โพสต์ -->
+<div class="post-actions">
+    
+    <!-- ปุ่มกดไลก์ (หน้ายิ้มยกนิ้วโป้ง) -->
+    <button class="action-btn like-button" onclick="toggleLike(this)">
+        <img src="like-btn.png" alt="Like" class="action-icon">
+        <span class="action-count">12</span>
+    </button>
+    
+    <!-- ปุ่มคอมเมนต์ (กล่องข้อความพาสเทล) -->
+    <button class="action-btn comment-button" onclick="openComments()">
+        <img src="comment-btn.png" alt="Comment" class="action-icon">
+        <span class="action-count">5</span>
+    </button>
+    
+</div>
             </div>
         </div>
     </main>
