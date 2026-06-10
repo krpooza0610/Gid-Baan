@@ -668,15 +668,7 @@ window.triggerSearch = (event) => {
 };
 
 function scrollToTop() {
-    // 🌟 ถ้าระบบเลื่อนของภูใช้กล่อง .feed-container (ตามสูตรที่เจมส์ให้รอบก่อน)
-    const feed = document.querySelector('.feed-container');
-    if (feed) {
-        feed.scrollTo({
-            top: 0,
-            behavior: 'smooth' // สั่งให้มันค่อย ๆ เลื่อนขึ้นแบบสมูทนุ่มนวล
-        });
-    } else {
-        // 🌟 แต่ถ้าภูใช้การเลื่อนหน้าจอของเว็บหลักปกติ ให้ใช้บรรทัดนี้ครับ
+            // 🌟 แต่ถ้าภูใช้การเลื่อนหน้าจอของเว็บหลักปกติ ให้ใช้บรรทัดนี้ครับ
         window.scrollTo({
             top: 0,
             behavior: 'smooth'
