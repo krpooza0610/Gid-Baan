@@ -453,6 +453,18 @@
         .nav-center-btn:active {
             transform: scale(0.95);
         }
+
+        .logo-img {
+    height: 40px;         /* ขนาดความสูงรูปโลโก้เดิมของภู */
+    cursor: pointer;      /* เปลี่ยนเมาส์เป็นรูปมือเมื่อชี้ */
+    transition: transform 0.1s ease, opacity 0.1s ease;
+}
+
+/* เอฟเฟกต์ตอนกดจิ้ม: ให้รูปหดเล็กลงนิดนึงเหมือนเรากดปุ่มจริง ๆ */
+.logo-img:active {
+    transform: scale(0.95);
+    opacity: 0.8;
+}
     </style>
 </head>
 <body>
@@ -462,7 +474,8 @@
     <!-- Header ส่วนบน -->
 <header class="main-header">
     <div class="logo">
-        <img src="logo.png" alt="Gid-Baan Logo" style="height: auto; width: 200px; display: block; margin-left: -25px;">
+        <!-- จิ้มที่รูปภาพโลโก้แล้วสั่งให้วิ่งไปทำงานที่ฟังก์ชัน scrollToTop -->
+<img src="logo.png" alt="Gid-Baan Logo" onclick="scrollToTop()" class="logo-img">
     </div>
     
     <!-- แถบสถานะวงรีแปลงร่าง (Status Capsule) -->
@@ -666,6 +679,21 @@ window.triggerSearch = (event) => {
     // รีเซ็ตเวลานับถอยหลังใหม่ให้ทันทีหลังจากกด เพื่อไม่ให้มันหดวาร์ปหลุดมือตอนกำลังเล่น
     startCapsuleTimer(); 
 };
+
+function scrollToTop() {
+    const feed = document.querySelector('.feed-container');
+    if (feed) {
+        feed.scrollTo({
+            top: 0,
+            behavior: 'smooth' // เลื่อนกลับขึ้นบนสุดแบบสมูท ๆ
+        });
+    } else {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
+}
 </script>
 </body>
 </html>
