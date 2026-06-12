@@ -506,14 +506,22 @@
     align-items: center;
     padding: 20px;
 }
+/* 1. แก้กล่องครอบให้แน่ใจว่ามันจัดทุกอย่างไว้ตรงกลาง */
 .login-box {
     width: 100%;
     max-width: 360px;
+    display: flex;          /* เพิ่มบรรทัดนี้ */
+    flex-direction: column; /* เรียงของในกล่องจากบนลงล่าง */
+    align-items: center;    /* จัดของทุกอย่าง (รวมถึงโลโก้) ให้อยู่กึ่งกลางแนวตั้ง */
     text-align: center;
 }
+
+/* 2. แก้ไขขนาดและเคลียร์ Margin ที่อาจจะทำให้มันเบี้ยว */
 .login-logo {
-    height: 200px;
-    margin-bottom: 10px;
+    width: 200px;           /* ปรับเป็น 200px ตามที่ภูชอบ */
+    height: auto;           /* ใช้ auto เพื่อให้ภาพรักษาอัตราส่วน ไม่ยืดไม่เบี้ยว */
+    margin: 0 auto 20px auto; /* 0 บน, auto ซ้าย-ขวา (ช่วยเรื่องจัดกลาง), 20px ล่าง */
+    display: block;         /* เปลี่ยนเป็น block เพื่อให้คำสั่ง margin ทำงานได้เต็มที่ */
 }
 .login-title {
     font-size: 28px;
