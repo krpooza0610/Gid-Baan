@@ -765,7 +765,37 @@ function updateUserUI() {
     document.querySelector('.avatar-circle').innerHTML = currentUserData.photo;
 
     document.getElementById('display-name').innerText = currentUserData.name;
-}
+
+    // ระบบตรวจจับและจำสิทธิ์การล็อกอินอัตโนมัติ (เปิดแอปมาปั๊บเช็กปุ๊บ)
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        // ✨ ถ้ามีผู้ใช้ล็อกอินค้างไว้อยู่แล้ว (ไม่ว่าจะ Google หรือ Guest)
+        if (user.isAnonymous) {
+            // ถ้าระบบจำได้ว่าเป็น Guest
+            const today = new Date();
+            const yy = String(today.getFullYear()).slice(-2);
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            
+            currentUserData.name = "เด็กใหม่" + (yy + mm + dd);
+            currentUserData.photo = "👤";
+        } else {
+            // ถ้าระบบจำได้ว่าเป็นบัญชี Google จริง
+            currentUserData.name = user.displayName;
+            currentUserData.photo = `<img src="${user.photoURL}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+        }
+        
+        // สั่งอัปเดตหน้าจอเพื่อพาข้ามหน้าล็อกอินเข้าแอปทันที!
+        window.updateUserUI();
+        console.log("จำสิทธิ์ผู้ใช้สำเร็จ: เข้าสู่ระบบอัตโนมัติเรียบร้อย");
+    } else {
+        // ถ้าไม่มีคนล็อกอินค้างไว้ ให้โชว์หน้าล็อกอินตามปกติ
+        const loginPage = document.getElementById('login-page');
+        if (loginPage) loginPage.style.display = 'flex';
+    }
+});
 
     // --- ฟังก์ชันสลับหน้าแอป ---
     window.showPage = (pageId, element) => {
