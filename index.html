@@ -611,9 +611,18 @@
     </div>
     
     <!-- ฝั่งขวาสุด: รูปโปรไฟล์วงกลม -->
-    <div class="avatar-zone">
-        <div class="avatar-circle">👤</div>
-    </div>
+    <div class="avatar-zone" onclick="
+    event.stopPropagation(); 
+    const capsule = document.getElementById('status-capsule');
+    if (capsule.classList.contains('active')) {
+        // ✨ ถ้ากางออกอยู่แล้ว (จิ้มครั้งที่ 2) -> วาร์ปไปหน้าโปรไฟล์ทันที!
+        showPage('profile-page', document.querySelector('.nav-item:nth-child(3)'));
+    } else {
+        // ✨ ถ้ายังหดอยู่ (จิ้มครั้งแรก) -> สั่งให้มันกางขยายออกก่อน
+        expandCapsule(event);
+    }
+">
+    <div class="avatar-circle">👤</div>
 </div>
     
 </header>
@@ -674,9 +683,20 @@
     <!-- หน้าที่ 4: หน้าจัดการโปรไฟล์ -->
 <main id="profile-page" class="page">
     <div class="page-title">โปรไฟล์ของภู</div>
-    <div class="profile-content">
-        <!-- เดี๋ยวเรามาดีไซน์หน้านี้กันต่อครับ -->
-        <p>ชื่อ: <span id="display-name"></span></p>
+    <div class="profile-content" style="display: flex; flex-direction: column; align-items: center; gap: 20px; margin-top: 30px;">
+        
+        <div class="profile-avatar-large" id="profile-page-avatar" style="width: 100px; height: 100px; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden;">
+            👤
+        </div>
+
+        <div style="font-size: 20px; font-weight: 700; color: var(--primary);">
+            <span id="profile-display-name">ผู้มาเยือน</span>
+        </div>
+
+        <button onclick="logout()" class="btn-login" style="background: #ff8b8b; color: white; border: none; box-shadow: 0 4px 14px rgba(255, 139, 139, 0.3); margin-top: 20px;">
+            <span>🚪 ออกจากระบบ</span>
+        </button>
+        
     </div>
 </main>
     
@@ -702,6 +722,8 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    // ดึงคำสั่ง signOut มาจากไลบรารีเบื้องบนก่อน (ไปแปะเพิ่มไว้แถวๆ บรรทัด import ด้านบนสุดนะภู)
+import { signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     
     // ใช้ Firebase คอนฟิกชุดเดิมของแอป MANBODTIP ได้เลยครับภู[span_1](start_span)[span_1](end_span)
     const firebaseConfig = {
@@ -768,6 +790,14 @@ function updateUserUI() {
 
     if (document.getElementById('display-name')) {
         document.getElementById('display-name').innerText = currentUserData.name;
+    }
+
+    // ✨ เจมส์เติม 2 บรรทัดนี้: ดันข้อมูลไปโชว์ที่หน้าโปรไฟล์ใหม่ของภูด้วย
+    if (document.getElementById('profile-page-avatar')) {
+        document.getElementById('profile-page-avatar').innerHTML = currentUserData.photo;
+    }
+    if (document.getElementById('profile-display-name')) {
+        document.getElementById('profile-display-name').innerText = currentUserData.name;
     }
 } // <--- ✨ ใส่ปีกนกปิดฟังก์ชัน updateUserUI ตรงนี้ให้เรียบร้อย!
 
@@ -897,6 +927,22 @@ function scrollToTop() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
+
+    // ฟังก์ชันออกจากระบบ
+window.logout = () => {
+    if (confirm("ภูต้องการออกจากระบบใช่ไหมครับเพื่อน?")) {
+        signOut(auth).then(() => {
+            console.log("ออกจากระบบสำเร็จ");
+            // รีเซ็ตข้อมูลในแอปกลับเป็นค่าเริ่มต้น
+            currentUserData = { name: "ผู้มาเยือน", photo: "👤" };
+            // ดีดหน้าจอกลับไปหน้าแรกสุดเตรียมพร้อมเผื่อล็อกอินใหม่
+            showPage('home-page');
+            document.getElementById('login-page').style.display = 'flex';
+        }).catch((error) => {
+            alert("เกิดข้อผิดพลาดในการออกจากระบบ: " + error.message);
+        });
+    }
+};
 </script>
 </body>
 </html>
