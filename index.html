@@ -710,21 +710,20 @@
 
 <!-- ส่วนของ Firebase และ Logic ควบคุมหน้าจอ -->
 <script type="module">
+    // 🌟 1. รวบรวมและจัดระเบียบคำสั่ง Import ทั้งหมดให้อยู่บนสุด
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    // ดึงคำสั่ง signOut มาจากไลบรารีเบื้องบนก่อน (ไปแปะเพิ่มไว้แถวๆ บรรทัด import ด้านบนสุดนะภู)
-import { signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     
-    // ใช้ Firebase คอนฟิกชุดเดิมของแอป MANBODTIP ได้เลยครับภู[span_1](start_span)[span_1](end_span)
+    // คอนฟิก Firebase ของแอป Gid-Baan
     const firebaseConfig = {
         apiKey: "AIzaSyC6V0mqM1Xx8bAx4r0EQ0DoI-ezBQObzxo",
-    authDomain: "gid-baan.firebaseapp.com",
+        authDomain: "gid-baan.firebaseapp.com",
         databaseURL: "https://manbodtip-default-rtdb.firebaseio.com",
-    projectId: "gid-baan",
-    storageBucket: "gid-baan.firebasestorage.app",
-    messagingSenderId: "815123992141",
-    appId: "1:815123992141:web:6e6faa71dc4a83b0641604"
+        projectId: "gid-baan",
+        storageBucket: "gid-baan.firebasestorage.app",
+        messagingSenderId: "815123992141",
+        appId: "1:815123992141:web:6e6faa71dc4a83b0641604"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -734,103 +733,107 @@ import { signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth
     const chatRef = ref(db, "chats");
     const postsRef = ref(db, "posts");
 
-    // เก็บข้อมูลผู้ใช้ปัจจุบันไว้ในตัวแปรกลาง
-let currentUserData = { name: "ผู้มาเยือน", photo: "👤" };
+    // 🌟 2. ย้ายตัวแปรกลางขึ้นมาประกาศด้านบนให้พร้อมใช้งาน
+    let currentUserData = { name: "ผู้มาเยือน", photo: "👤" };
+    let selectedPostImageBase64 = null;
+    let capsuleTimer = null;
 
-// ฟังก์ชัน ล็อกอินด้วย Google
-window.loginWithGoogle = () => {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider)
-        .then((result) => {
-            const user = result.user;
-            currentUserData.name = user.displayName;
-            currentUserData.photo = `<img src="${user.photoURL}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+    // -------------------------------------------------------------
+    // ระบบตรวจจับและจำสิทธิ์การล็อกอินอัตโนมัติ (ขยับมาทำงานช่วงแรก)
+    // -------------------------------------------------------------
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            if (user.isAnonymous) {
+                const today = new Date();
+                const yy = String(today.getFullYear()).slice(-2);
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                
+                currentUserData.name = "เด็กใหม่" + (yy + mm + dd);
+                currentUserData.photo = "👤";
+            } else {
+                currentUserData.name = user.displayName;
+                currentUserData.photo = `<img src="${user.photoURL}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+            }
             
             updateUserUI();
-        }).catch((error) => {
-            alert("ล็อกอินล้มเหลว: " + error.message);
-        });
-};
-
-// ฟังก์ชัน ล็อกอินด้วย Guest
-window.loginAsGuest = () => {
-    signInAnonymously(auth)
-        .then(() => {
-            // ดึงวันที่ปัจจุบันมาเป็น YYMMDD
-            const today = new Date();
-            const dateStr = today.toISOString().slice(2, 10).replace(/-/g, '');
-            
-            currentUserData.name = "เด็กใหม่" + dateStr; // จะได้ "เด็กใหม่260612"
-            currentUserData.photo = "👤"; // เดี๋ยวภูเอารูปมาเปลี่ยนใส่ตรงนี้ได้เลยครับ
-            
-            updateUserUI();
-        }).catch((error) => {
-            alert("เข้าสู่ระบบ Guest ล้มเหลว: " + error.message);
-        });
-};
-
-// ฟังก์ชันอัปเดตหน้าตาเว็บเมื่อเข้าสู่ระบบสำเร็จ (ซ่อนหน้าล็อกอิน + เปลี่ยนชื่อและรูปโปรไฟล์)
-function updateUserUI() {
-    // ซ่อนหน้าต่างล็อกอินออกไป
-    document.getElementById('login-page').style.display = 'none';
-        
-    // เปลี่ยนรูปโปรไฟล์ด้านขวาสุดของวงรีให้เป็นรูปจริงจาก Google!
-    if (document.querySelector('.avatar-circle')) {
-        document.querySelector('.avatar-circle').innerHTML = currentUserData.photo;
-    }
-
-    if (document.getElementById('display-name')) {
-        document.getElementById('display-name').innerText = currentUserData.name;
-    }
-
-    // ✨ เจมส์เติม 2 บรรทัดนี้: ดันข้อมูลไปโชว์ที่หน้าโปรไฟล์ใหม่ของภูด้วย
-    if (document.getElementById('profile-page-avatar')) {
-        document.getElementById('profile-page-avatar').innerHTML = currentUserData.photo;
-    }
-    if (document.getElementById('profile-display-name')) {
-        document.getElementById('profile-display-name').innerText = currentUserData.name;
-    }
-} // <--- ✨ ใส่ปีกนกปิดฟังก์ชัน updateUserUI ตรงนี้ให้เรียบร้อย!
-
-// -------------------------------------------------------------
-// ระบบตรวจจับและจำสิทธิ์การล็อกอินอัตโนมัติ (เปิดแอปมาปั๊บเช็กปุ๊บ) - แยกออกมาอยู่ข้างนอก
-// -------------------------------------------------------------
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        // ✨ ถ้ามีผู้ใช้ล็อกอินค้างไว้อยู่แล้ว (ไม่ว่าจะ Google หรือ Guest)
-        if (user.isAnonymous) {
-            // ถ้าระบบจำได้ว่าเป็น Guest
-            const today = new Date();
-            const yy = String(today.getFullYear()).slice(-2);
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            
-            currentUserData.name = "เด็กใหม่" + (yy + mm + dd);
-            currentUserData.photo = "👤";
+            console.log("จำสิทธิ์ผู้ใช้สำเร็จ: เข้าสู่ระบบอัตโนมัติเรียบร้อย");
         } else {
-            // ถ้าระบบจำได้ว่าเป็นบัญชี Google จริง
-            currentUserData.name = user.displayName;
-            currentUserData.photo = `<img src="${user.photoURL}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+            const loginPage = document.getElementById('login-page');
+            if (loginPage) loginPage.style.display = 'flex';
         }
-        
-        // สั่งอัปเดตหน้าจอเพื่อพาข้ามหน้าล็อกอินเข้าแอปทันที!
-        updateUserUI(); // ⚠️ ปรับตรงนี้: เรียก updateUserUI() ตรง ๆ ได้เลย ไม่ต้องใส่ window. ข้างหน้า
-        console.log("จำสิทธิ์ผู้ใช้สำเร็จ: เข้าสู่ระบบอัตโนมัติเรียบร้อย");
-    } else {
-        // ถ้าไม่มีคนล็อกอินค้างไว้ ให้โชว์หน้าล็อกอินตามปกติ
+    });
+
+    // ฟังก์ชันอัปเดตหน้าตาเว็บเมื่อเข้าสู่ระบบสำเร็จ
+    function updateUserUI() {
         const loginPage = document.getElementById('login-page');
-        if (loginPage) loginPage.style.display = 'flex';
+        if (loginPage) loginPage.style.display = 'none';
+            
+        if (document.querySelector('.avatar-circle')) {
+            document.querySelector('.avatar-circle').innerHTML = currentUserData.photo;
+        }
+        if (document.getElementById('display-name')) {
+            document.getElementById('display-name').innerText = currentUserData.name;
+        }
+        if (document.getElementById('profile-page-avatar')) {
+            document.getElementById('profile-page-avatar').innerHTML = currentUserData.photo;
+        }
+        if (document.getElementById('profile-display-name')) {
+            document.getElementById('profile-display-name').innerText = currentUserData.name;
+        }
     }
-});
+
+    // ฟังก์ชัน ล็อกอินด้วย Google
+    window.loginWithGoogle = () => {
+        const provider = new GoogleAuthProvider();
+        signInWithPopup(auth, provider)
+            .then((result) => {
+                const user = result.user;
+                currentUserData.name = user.displayName;
+                currentUserData.photo = `<img src="${user.photoURL}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+                updateUserUI();
+            }).catch((error) => {
+                alert("ล็อกอินล้มเหลว: " + error.message);
+            });
+    };
+
+    // ฟังก์ชัน ล็อกอินด้วย Guest
+    window.loginAsGuest = () => {
+        signInAnonymously(auth)
+            .then(() => {
+                const today = new Date();
+                const dateStr = today.toISOString().slice(2, 10).replace(/-/g, '');
+                currentUserData.name = "เด็กใหม่" + dateStr;
+                currentUserData.photo = "👤";
+                updateUserUI();
+            }).catch((error) => {
+                alert("เข้าสู่ระบบ Guest ล้มเหลว: " + error.message);
+            });
+    };
+
+    // ฟังก์ชันออกจากระบบ
+    window.logout = () => {
+        if (confirm("ภูต้องการออกจากระบบใช่ไหมครับเพื่อน?")) {
+            signOut(auth).then(() => {
+                console.log("ออกจากระบบสำเร็จ");
+                currentUserData = { name: "ผู้มาเยือน", photo: "👤" };
+                showPage('home-page');
+                const loginPage = document.getElementById('login-page');
+                if (loginPage) loginPage.style.display = 'flex';
+            }).catch((error) => {
+                alert("เกิดข้อผิดพลาดในการออกจากระบบ: " + error.message);
+            });
+        }
+    };
 
     // --- ฟังก์ชันสลับหน้าแอป ---
     window.showPage = (pageId, element) => {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         
-        document.getElementById(pageId).classList.add('active');
+        const targetPage = document.getElementById(pageId);
+        if (targetPage) targetPage.classList.add('active');
+        
         if(element && element.classList.contains('nav-item')) {
             element.classList.add('active');
         }
@@ -854,181 +857,132 @@ onAuthStateChanged(auth, (user) => {
         display.scrollTop = display.scrollHeight;
     });
 
-    // --- ระบบโพสต์ข้อความพื้นฐาน ---
+    // --- ระบบเปิด-ปิด และพรีวิวกล่องลอยสร้างโพสต์ ---
+    window.openPostModal = () => {
+        document.getElementById('post-modal').style.display = 'flex';
+    };
+
+    window.closePostModal = () => {
+        document.getElementById('post-modal').style.display = 'none';
+        document.getElementById('postInput').value = "";
+        document.getElementById('postImageInput').value = "";
+        document.getElementById('image-status').innerText = "ยังไม่ได้เลือกรูปภาพ";
+        document.getElementById('image-preview-container').style.display = 'none';
+        selectedPostImageBase64 = null;
+    };
+
+    window.previewImage = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            document.getElementById('image-status').innerText = file.name;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                selectedPostImageBase64 = e.target.result;
+                document.getElementById('image-preview').src = selectedPostImageBase64;
+                document.getElementById('image-preview-container').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    // --- ระบบส่งโพสต์ขึ้น Firebase ---
     window.uploadAndPost = () => {
-    const content = document.getElementById('postInput').value;
-    if (!content.trim() && !selectedPostImageBase64) return; // ถ้าไม่มีทั้งข้อความและรูป ไม่ต้องโพสต์
+        const content = document.getElementById('postInput').value;
+        if (!content.trim() && !selectedPostImageBase64) return;
 
-    // ดันข้อมูลขึ้น Firebase Realtime Database ของภู
-    push(postsRef, {
-        author: currentUserData.name,
-        content: content,
-        image: selectedPostImageBase64 || "", // หากมีรูปให้เซฟลงไปด้วยเลยครับเพื่อน
-        likes: 0,
-        timestamp: Date.now()
-    }).then(() => {
-        // เมื่อโพสต์สำเร็จ ทำการปิดกล่องลอยและล้างข้อมูลทันที
-        window.closePostModal();
-        console.log("โพสต์ลงบอร์ด Gid-Baan สำเร็จ!");
-    }).catch((error) => {
-        alert("โพสต์ล้มเหลว: " + error.message);
-    });
-};
-    
-    // สั่งให้ซ่อนแถบ URL ทันทีที่โหลดหน้าเว็บเสร็จ
-window.addEventListener("load", function() {
-    setTimeout(function() {
-        // เลื่อนหน้าจอลงไป 1 พิกเซลเพื่อหลอกเบราว์เซอร์ให้ซ่อนแถบ URL
-        window.scrollTo(0, 1);
-    }, 100);
-});
-
-    let capsuleTimer = null;
-
-window.expandCapsule = (event) => {
-    const capsule = document.getElementById('status-capsule');
-    
-    // ถ้ามันยังไม่ได้ขยาย ให้ขยายออกซะ
-    if (!capsule.classList.contains('active')) {
-        capsule.classList.add('active');
-        startCapsuleTimer();
-    }
-};
-
-// ฟังก์ชันเริ่มนับถอยหลัง 5 วินาทีแล้วหดกลับ
-function startCapsuleTimer() {
-    // รีเซ็ตไทเมอร์เก่าทิ้งก่อนเพื่อป้องกันเวลาซ้อนกัน
-    if (capsuleTimer) clearTimeout(capsuleTimer);
-    
-    capsuleTimer = setTimeout(() => {
-        const capsule = document.getElementById('status-capsule');
-        capsule.classList.remove('active');
-    }, 5000); // 5000 มิลลิวินาที = 5 วินาทีเป๊ะ ๆ ตามที่ภูขอเลยครับ
-}
-
-// ฟังก์ชันเมื่อจิ้มที่แว่นขยาย (ป้องกันไม่ให้มันหดตัวตอนกำลังกดค้นหา)
-window.triggerSearch = (event) => {
-    event.stopPropagation(); // หยุดไม่ให้คำสั่งคลิกวิ่งไปกวนกล่องหลัก
-    alert("เปิดหน้าต่างค้นหาจอมยุทธแอป Gid-Baan! 🔍");
-    
-    // รีเซ็ตเวลานับถอยหลังใหม่ให้ทันทีหลังจากกด เพื่อไม่ให้มันหดวาร์ปหลุดมือตอนกำลังเล่น
-    startCapsuleTimer(); 
-};
-
-function scrollToTop() {
-    const feedContainer = document.querySelector('.feed-container');
-    if (feedContainer) {
-        feedContainer.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-}
-
-    // ฟังก์ชันออกจากระบบ
-window.logout = () => {
-    if (confirm("ภูต้องการออกจากระบบใช่ไหมครับเพื่อน?")) {
-        signOut(auth).then(() => {
-            console.log("ออกจากระบบสำเร็จ");
-            // รีเซ็ตข้อมูลในแอปกลับเป็นค่าเริ่มต้น
-            currentUserData = { name: "ผู้มาเยือน", photo: "👤" };
-            // ดีดหน้าจอกลับไปหน้าแรกสุดเตรียมพร้อมเผื่อล็อกอินใหม่
-            showPage('home-page');
-            document.getElementById('login-page').style.display = 'flex';
+        push(postsRef, {
+            author: currentUserData.name,
+            content: content,
+            image: selectedPostImageBase64 || "",
+            likes: 0,
+            timestamp: Date.now()
+        }).then(() => {
+            window.closePostModal();
+            console.log("โพสต์ลงบอร์ด Gid-Baan สำเร็จ!");
         }).catch((error) => {
-            alert("เกิดข้อผิดพลาดในการออกจากระบบ: " + error.message);
+            alert("โพสต์ล้มเหลว: " + error.message);
         });
-    }
-};
+    };
 
-    // บันทึกตัวแปรเก็บไฟล์รูปภาพชั่วคราว
-let selectedPostImageBase64 = null;
+    // --- ฟังก์ชันวาดการ์ดโพสต์และดึงข้อมูลจาก Database ---
+    function renderPost(snapshot) {
+        const data = snapshot.val();
+        const feedContainer = document.getElementById('feed-container');
+        if (!feedContainer) return;
 
-// ฟังก์ชันเปิดกล่องลอยสร้างโพสต์
-window.openPostModal = () => {
-    document.getElementById('post-modal').style.display = 'flex';
-};
+        let postImageHtml = "";
+        if (data.image && data.image.trim() !== "") {
+            postImageHtml = `<img src="${data.image}" class="post-img">`;
+        }
 
-// ฟังก์ชันปิดกล่องลอยสร้างโพสต์
-window.closePostModal = () => {
-    document.getElementById('post-modal').style.display = 'none';
-    // เคลียร์ค่าเก่าทิ้งเมื่อปิดกล่อง
-    document.getElementById('postInput').value = "";
-    document.getElementById('postImageInput').value = "";
-    document.getElementById('image-status').innerText = "ยังไม่ได้เลือกรูปภาพ";
-    document.getElementById('image-preview-container').style.display = 'none';
-    selectedPostImageBase64 = null;
-};
+        const postTime = new Date(data.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
 
-// ฟังก์ชันแปลงรูปภาพที่เลือกและโชว์พรีวิว (ใช้ Base64 แบบคลีน ๆ ไม่ต้องพึ่ง Storage ก่อน)
-window.previewImage = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-        document.getElementById('image-status').innerText = file.name;
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            selectedPostImageBase64 = e.target.result; // เก็บสายอักขระรูปภาพไว้ส่งขึ้น Database
-            document.getElementById('image-preview').src = selectedPostImageBase64;
-            document.getElementById('image-preview-container').style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-    }
-};
-
-// -------------------------------------------------------------
-// ระบบดึงโพสต์จากฐานข้อมูลมาแสดงบนหน้าฟีด (โหลดของเก่า + อัปเดตของใหม่ Realtime)
-// -------------------------------------------------------------
-import { ref, onChildAdded } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-// เจมส์แนะนำให้สร้างฟังก์ชันนี้ขึ้นมาครอบเพื่อความคลีน
-function renderPost(snapshot) {
-    const data = snapshot.val();
-    const feedContainer = document.getElementById('feed-container');
-    if (!feedContainer) return;
-
-    // ตรวจสอบว่ามีรูปภาพไหม
-    let postImageHtml = "";
-    if (data.image && data.image.trim() !== "") {
-        postImageHtml = `<img src="${data.image}" class="post-img">`;
-    }
-
-    // แปลงเวลา Timestamp มินิมอล
-    const postTime = new Date(data.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-
-    const postCardHtml = `
-        <div class="post-card" id="post-${snapshot.key}">
-            <div class="post-header">
-                <div class="avatar-placeholder" style="background: #1a1a1a; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px;">👤</div>
-                <div>
-                    <div class="author-name">${data.author || "จอมยุทธไร้นาม"}</div>
-                    <div style="font-size: 11px; color: var(--text-dim);">${postTime} น.</div>
+        const postCardHtml = `
+            <div class="post-card" id="post-${snapshot.key}">
+                <div class="post-header">
+                    <div class="avatar-placeholder" style="background: #1a1a1a; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px;">👤</div>
+                    <div>
+                        <div class="author-name">${data.author || "จอมยุทธไร้นาม"}</div>
+                        <div style="font-size: 11px; color: var(--text-dim);">${postTime} น.</div>
+                    </div>
+                </div>
+                <div class="post-content">${data.content || ""}</div>
+                ${postImageHtml}
+                
+                <div class="post-actions">
+                    <button class="action-btn like-button" onclick="alert('เดี๋ยวมาระเบิดพลังไลก์กันสเต็ปถัดไปครับภู! 💚')">
+                        <img src="like-btn.png" alt="Like" class="action-icon">
+                        <span class="action-count">${data.likes || 0}</span>
+                    </button>
+                    <button class="action-btn comment-button">
+                        <img src="comment-btn.png" alt="Comment" class="action-icon">
+                        <span class="action-count">0</span>
+                    </button>
                 </div>
             </div>
-            <div class="post-content">${data.content || ""}</div>
-            ${postImageHtml}
-            
-            <div class="post-actions">
-                <button class="action-btn like-button" onclick="alert('เดี๋ยวมาระเบิดพลังไลก์กันสเต็ปถัดไปครับภู! 💚')">
-                    <img src="like-btn.png" alt="Like" class="action-icon">
-                    <span class="action-count">${data.likes || 0}</span>
-                </button>
-                <button class="action-btn comment-button">
-                    <img src="comment-btn.png" alt="Comment" class="action-icon">
-                    <span class="action-count">0</span>
-                </button>
-            </div>
-        </div>
-    `;
+        `;
+        feedContainer.insertAdjacentHTML('afterbegin', postCardHtml);
+    }
 
-    // ดันโพสต์ใหม่ไปอยู่บนสุดเสมอ
-    feedContainer.insertAdjacentHTML('afterbegin', postCardHtml);
-}
+    onChildAdded(postsRef, (snapshot) => {
+        renderPost(snapshot);
+    });
+    
+    // --- สคริปต์ความลื่นไหลและกลไก Capsule หน้ากากส่วนบน ---
+    window.addEventListener("load", function() {
+        setTimeout(function() { window.scrollTo(0, 1); }, 100);
+    });
 
-// ใช้งาน onChildAdded ควบคู่กับฐานข้อมูล postsRef ของภู 
-// ตัวนี้มันฉลาดมากครับ พอเปิดแอปปั๊บ มันจะไปกวาดโพสต์เก่าทั้งหมดใน Firebase มาวิ่งผ่านฟังก์ชัน renderPost ให้ทันที และถ้ามีใครโพสต์ใหม่มันก็จะวิ่งซ้ำให้อัตโนมัติด้วย!
-onChildAdded(postsRef, (snapshot) => {
-    renderPost(snapshot);
-});
+    window.expandCapsule = (event) => {
+        const capsule = document.getElementById('status-capsule');
+        if (!capsule.classList.contains('active')) {
+            capsule.classList.add('active');
+            startCapsuleTimer();
+        }
+    };
+
+    function startCapsuleTimer() {
+        if (capsuleTimer) clearTimeout(capsuleTimer);
+        capsuleTimer = setTimeout(() => {
+            const capsule = document.getElementById('status-capsule');
+            if(capsule) capsule.classList.remove('active');
+        }, 5000);
+    }
+
+    window.triggerSearch = (event) => {
+        event.stopPropagation();
+        alert("เปิดหน้าต่างค้นหาจอมยุทธแอป Gid-Baan! 🔍");
+        startCapsuleTimer(); 
+    };
+
+    window.scrollToTop = () => {
+        const feedContainer = document.getElementById('feed-container');
+        if (feedContainer) {
+            feedContainer.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
 </script>
 </body>
 </html>
