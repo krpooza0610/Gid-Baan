@@ -762,11 +762,18 @@ function updateUserUI() {
     document.getElementById('login-page').style.display = 'none';
         
     // เปลี่ยนรูปโปรไฟล์ด้านขวาสุดของวงรีให้เป็นรูปจริงจาก Google!
-    document.querySelector('.avatar-circle').innerHTML = currentUserData.photo;
+    if (document.querySelector('.avatar-circle')) {
+        document.querySelector('.avatar-circle').innerHTML = currentUserData.photo;
+    }
 
-    document.getElementById('display-name').innerText = currentUserData.name;
+    if (document.getElementById('display-name')) {
+        document.getElementById('display-name').innerText = currentUserData.name;
+    }
+} // <--- ✨ ใส่ปีกนกปิดฟังก์ชัน updateUserUI ตรงนี้ให้เรียบร้อย!
 
-    // ระบบตรวจจับและจำสิทธิ์การล็อกอินอัตโนมัติ (เปิดแอปมาปั๊บเช็กปุ๊บ)
+// -------------------------------------------------------------
+// ระบบตรวจจับและจำสิทธิ์การล็อกอินอัตโนมัติ (เปิดแอปมาปั๊บเช็กปุ๊บ) - แยกออกมาอยู่ข้างนอก
+// -------------------------------------------------------------
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 onAuthStateChanged(auth, (user) => {
@@ -788,7 +795,7 @@ onAuthStateChanged(auth, (user) => {
         }
         
         // สั่งอัปเดตหน้าจอเพื่อพาข้ามหน้าล็อกอินเข้าแอปทันที!
-        window.updateUserUI();
+        updateUserUI(); // ⚠️ ปรับตรงนี้: เรียก updateUserUI() ตรง ๆ ได้เลย ไม่ต้องใส่ window. ข้างหน้า
         console.log("จำสิทธิ์ผู้ใช้สำเร็จ: เข้าสู่ระบบอัตโนมัติเรียบร้อย");
     } else {
         // ถ้าไม่มีคนล็อกอินค้างไว้ ให้โชว์หน้าล็อกอินตามปกติ
