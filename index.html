@@ -975,24 +975,26 @@ window.previewImage = (event) => {
     }
 };
 
-    // -------------------------------------------------------------
-// ระบบดึงโพสต์จากฐานข้อมูลมาแสดงบนหน้าฟีดแบบ Realtime
 // -------------------------------------------------------------
-onChildAdded(postsRef, (snapshot) => {
+// ระบบดึงโพสต์จากฐานข้อมูลมาแสดงบนหน้าฟีด (โหลดของเก่า + อัปเดตของใหม่ Realtime)
+// -------------------------------------------------------------
+import { ref, onChildAdded } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+// เจมส์แนะนำให้สร้างฟังก์ชันนี้ขึ้นมาครอบเพื่อความคลีน
+function renderPost(snapshot) {
     const data = snapshot.val();
     const feedContainer = document.getElementById('feed-container');
     if (!feedContainer) return;
 
-    // ตรวจสอบว่าในโพสต์มีรูปภาพไหม ถ้ามีให้สร้างแท็ก img เตรียมไว้
+    // ตรวจสอบว่ามีรูปภาพไหม
     let postImageHtml = "";
     if (data.image && data.image.trim() !== "") {
         postImageHtml = `<img src="${data.image}" class="post-img">`;
     }
 
-    // แปลงเวลา Timestamp ให้ดูง่าย (มินิมอล)
+    // แปลงเวลา Timestamp มินิมอล
     const postTime = new Date(data.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
 
-    // วาดโครงสร้างการ์ดโพสต์มินิมอลตามแบบที่ภูจัดสไตล์ไว้
     const postCardHtml = `
         <div class="post-card" id="post-${snapshot.key}">
             <div class="post-header">
@@ -1003,7 +1005,9 @@ onChildAdded(postsRef, (snapshot) => {
                 </div>
             </div>
             <div class="post-content">${data.content || ""}</div>
-            ${postImageHtml} <div class="post-actions">
+            ${postImageHtml}
+            
+            <div class="post-actions">
                 <button class="action-btn like-button" onclick="alert('เดี๋ยวมาระเบิดพลังไลก์กันสเต็ปถัดไปครับภู! 💚')">
                     <img src="like-btn.png" alt="Like" class="action-icon">
                     <span class="action-count">${data.likes || 0}</span>
@@ -1016,8 +1020,14 @@ onChildAdded(postsRef, (snapshot) => {
         </div>
     `;
 
-    // ดันโพสต์ใหม่ไปอยู่บนสุดของฟีด (ใช้ afterBegin เพื่อให้โพสต์ใหม่ล่าสุดอยู่บนสุดเสมอ)
+    // ดันโพสต์ใหม่ไปอยู่บนสุดเสมอ
     feedContainer.insertAdjacentHTML('afterbegin', postCardHtml);
+}
+
+// ใช้งาน onChildAdded ควบคู่กับฐานข้อมูล postsRef ของภู 
+// ตัวนี้มันฉลาดมากครับ พอเปิดแอปปั๊บ มันจะไปกวาดโพสต์เก่าทั้งหมดใน Firebase มาวิ่งผ่านฟังก์ชัน renderPost ให้ทันที และถ้ามีใครโพสต์ใหม่มันก็จะวิ่งซ้ำให้อัตโนมัติด้วย!
+onChildAdded(postsRef, (snapshot) => {
+    renderPost(snapshot);
 });
 </script>
 </body>
