@@ -629,18 +629,10 @@
     
     <!-- หน้าที่ 1: ฟีดข่าว (Home) -->
     <main id="home-page" class="page active">
-        <div id="feed-container">
-            <!-- ตัวอย่างโพสต์แบบ Static ให้เห็นดีไซน์ก่อนเชื่อมต่อข้อมูล -->
-            <div class="post-card">
-                <div class="post-header">
-                    <div class="avatar-placeholder"></div>
-                    <div>
-                        <div class="author-name">Elena Gomez</div>
-                        <div style="font-size: 11px; color: var(--text-dim);">@elenaG</div>
-                    </div>
-                </div>
-                <div class="post-content">Exploring Seoul this morning! ✨ #travel #seoul</div>
-                <img src="https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=500" class="post-img">
+    <div id="feed-container">
+        </div>
+</main>
+                
                 <!-- โซนปุ่มปฏิสัมพันธ์ใต้โพสต์ -->
 <div class="post-actions">
     
@@ -1002,6 +994,51 @@ window.previewImage = (event) => {
         reader.readAsDataURL(file);
     }
 };
+
+    // -------------------------------------------------------------
+// ระบบดึงโพสต์จากฐานข้อมูลมาแสดงบนหน้าฟีดแบบ Realtime
+// -------------------------------------------------------------
+onChildAdded(postsRef, (snapshot) => {
+    const data = snapshot.val();
+    const feedContainer = document.getElementById('feed-container');
+    if (!feedContainer) return;
+
+    // ตรวจสอบว่าในโพสต์มีรูปภาพไหม ถ้ามีให้สร้างแท็ก img เตรียมไว้
+    let postImageHtml = "";
+    if (data.image && data.image.trim() !== "") {
+        postImageHtml = `<img src="${data.image}" class="post-img">`;
+    }
+
+    // แปลงเวลา Timestamp ให้ดูง่าย (มินิมอล)
+    const postTime = new Date(data.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+
+    // วาดโครงสร้างการ์ดโพสต์มินิมอลตามแบบที่ภูจัดสไตล์ไว้
+    const postCardHtml = `
+        <div class="post-card" id="post-${snapshot.key}">
+            <div class="post-header">
+                <div class="avatar-placeholder" style="background: #1a1a1a; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px;">👤</div>
+                <div>
+                    <div class="author-name">${data.author || "จอมยุทธไร้นาม"}</div>
+                    <div style="font-size: 11px; color: var(--text-dim);">${postTime} น.</div>
+                </div>
+            </div>
+            <div class="post-content">${data.content || ""}</div>
+            ${postImageHtml} <div class="post-actions">
+                <button class="action-btn like-button" onclick="alert('เดี๋ยวมาระเบิดพลังไลก์กันสเต็ปถัดไปครับภู! 💚')">
+                    <img src="like-btn.png" alt="Like" class="action-icon">
+                    <span class="action-count">${data.likes || 0}</span>
+                </button>
+                <button class="action-btn comment-button">
+                    <img src="comment-btn.png" alt="Comment" class="action-icon">
+                    <span class="action-count">0</span>
+                </button>
+            </div>
+        </div>
+    `;
+
+    // ดันโพสต์ใหม่ไปอยู่บนสุดของฟีด (ใช้ afterBegin เพื่อให้โพสต์ใหม่ล่าสุดอยู่บนสุดเสมอ)
+    feedContainer.insertAdjacentHTML('afterbegin', postCardHtml);
+});
 </script>
 </body>
 </html>
