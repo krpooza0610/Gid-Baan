@@ -660,14 +660,7 @@
             </div>
         </div>
     </main>
-
-    <!-- หน้าที่ 2: สร้างโพสต์ใหม่ -->
-    <main id="post-page" class="page">
-        <div class="page-title">Create Post</div>
-        <textarea id="postInput" class="post-textarea" placeholder="ภูมีอะไรอยากแชร์วันนี้ไหมครับ..."></textarea>
-        <button onclick="uploadAndPost()" class="submit-btn">โพสต์เลย</button>
-    </main>
-
+    
     <!-- หน้าที่ 3: แชทสด -->
     <main id="chat-page" class="page">
         <div class="page-title">Live Chat</div>
@@ -706,14 +699,40 @@
         <img src="home-icon.png" alt="Feed" class="nav-btn-img">
     </div>
     
-    <div class="nav-center-btn" onclick="showPage('post-page', this)">
-        <img src="plus-icon.png" alt="Post" class="nav-center-img">
-    </div>
+    <div class="nav-center-btn" onclick="openPostModal()">
+    <img src="plus-icon.png" alt="Post" class="nav-center-img">
+</div>
     
     <div class="nav-item" onclick="showPage('chat-page', this)">
         <img src="chat-icon.png" alt="Chat" class="nav-btn-img">
     </div>
 </nav>
+
+    <div id="post-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.2); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
+    <div style="background: var(--card-bg); width: 100%; max-width: 400px; border-radius: 24px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid var(--border-color); position: relative;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <span style="font-weight: 700; font-size: 16px;">สร้างโพสต์ใหม่</span>
+            <button onclick="closePostModal()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-dim);">✕</button>
+        </div>
+
+        <textarea id="postInput" class="post-textarea" placeholder="ภูมีอะไรอยากแชร์วันนี้ไหมครับ..." style="margin-bottom: 10px; border-radius: 16px; background: #f8f9fa; border: none; padding: 14px; font-size: 14px;"></textarea>
+        
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+            <input type="file" id="postImageInput" accept="image/*" style="display: none;" onchange="previewImage(event)">
+            <button onclick="document.getElementById('postImageInput').click()" style="background: #eefaf6; border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; color: var(--accent); transition: 0.2s;">
+                ➕
+            </button>
+            <span id="image-status" style="font-size: 12px; color: var(--text-dim);">ยังไม่ได้เลือกรูปภาพ</span>
+        </div>
+
+        <div id="image-preview-container" style="display: none; width: 100%; max-height: 150px; border-radius: 12px; overflow: hidden; margin-bottom: 15px; border: 1px solid var(--border-color);">
+            <img id="image-preview" src="" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+
+        <button onclick="uploadAndPost()" class="submit-btn" style="background: var(--accent); color: white; border-radius: 20px; font-weight: 700;">ส่งโพสต์เลย 🚀</button>
+    </div>
+    </div>
 
 </div>
 
@@ -865,19 +884,24 @@ onAuthStateChanged(auth, (user) => {
 
     // --- ระบบโพสต์ข้อความพื้นฐาน ---
     window.uploadAndPost = () => {
-        const content = document.getElementById('postInput').value;
-        if (!content.trim()) return;
+    const content = document.getElementById('postInput').value;
+    if (!content.trim() && !selectedPostImageBase64) return; // ถ้าไม่มีทั้งข้อความและรูป ไม่ต้องโพสต์
 
-        push(postsRef, {
-            author: currentUserData.name, // ดึงชื่อจากระบบล็อกอินไปโพสต์แทนการล็อกชื่อตายตัว
-            content: content,
-            likes: 0,
-            timestamp: Date.now()
-        });
-
-        document.getElementById('postInput').value = "";
-        window.showPage('home-page'); // โพสต์เสร็จกลับหน้าแรก
-    };
+    // ดันข้อมูลขึ้น Firebase Realtime Database ของภู
+    push(postsRef, {
+        author: currentUserData.name,
+        content: content,
+        image: selectedPostImageBase64 || "", // หากมีรูปให้เซฟลงไปด้วยเลยครับเพื่อน
+        likes: 0,
+        timestamp: Date.now()
+    }).then(() => {
+        // เมื่อโพสต์สำเร็จ ทำการปิดกล่องลอยและล้างข้อมูลทันที
+        window.closePostModal();
+        console.log("โพสต์ลงบอร์ด Gid-Baan สำเร็จ!");
+    }).catch((error) => {
+        alert("โพสต์ล้มเหลว: " + error.message);
+    });
+};
     
     // สั่งให้ซ่อนแถบ URL ทันทีที่โหลดหน้าเว็บเสร็จ
 window.addEventListener("load", function() {
@@ -941,6 +965,41 @@ window.logout = () => {
         }).catch((error) => {
             alert("เกิดข้อผิดพลาดในการออกจากระบบ: " + error.message);
         });
+    }
+};
+
+    // บันทึกตัวแปรเก็บไฟล์รูปภาพชั่วคราว
+let selectedPostImageBase64 = null;
+
+// ฟังก์ชันเปิดกล่องลอยสร้างโพสต์
+window.openPostModal = () => {
+    document.getElementById('post-modal').style.display = 'flex';
+};
+
+// ฟังก์ชันปิดกล่องลอยสร้างโพสต์
+window.closePostModal = () => {
+    document.getElementById('post-modal').style.display = 'none';
+    // เคลียร์ค่าเก่าทิ้งเมื่อปิดกล่อง
+    document.getElementById('postInput').value = "";
+    document.getElementById('postImageInput').value = "";
+    document.getElementById('image-status').innerText = "ยังไม่ได้เลือกรูปภาพ";
+    document.getElementById('image-preview-container').style.display = 'none';
+    selectedPostImageBase64 = null;
+};
+
+// ฟังก์ชันแปลงรูปภาพที่เลือกและโชว์พรีวิว (ใช้ Base64 แบบคลีน ๆ ไม่ต้องพึ่ง Storage ก่อน)
+window.previewImage = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        document.getElementById('image-status').innerText = file.name;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            selectedPostImageBase64 = e.target.result; // เก็บสายอักขระรูปภาพไว้ส่งขึ้น Database
+            document.getElementById('image-preview').src = selectedPostImageBase64;
+            document.getElementById('image-preview-container').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
     }
 };
 </script>
